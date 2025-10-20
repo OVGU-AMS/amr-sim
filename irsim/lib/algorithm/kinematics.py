@@ -161,5 +161,4 @@ def omni_kinematics(
         )
     else:
         real_velocity = velocity
-
-    return state[0:2] + real_velocity * step_time
+    return state[0:2] + np.expand_dims(real_velocity.flatten() @ np.array([[0,1],[-1,0]]),1) * step_time

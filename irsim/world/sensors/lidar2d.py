@@ -114,7 +114,7 @@ class Lidar2D:
         self.time_inc = (self.angle_range / (2 * pi)) * scan_time / number
         self.range_data = range_max * np.ones(number)
 
-        self.angle_list = np.linspace(self.angle_min, self.angle_max, num=number)
+        self.angle_list = np.linspace(self.angle_min, self.angle_max, num=number, endpoint=False)
 
         self._state = state
         self.init_geometry(self._state)

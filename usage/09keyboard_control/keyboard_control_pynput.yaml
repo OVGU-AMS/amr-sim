@@ -9,7 +9,7 @@ world:
 
 robot:
   - kinematics: {name: 'acker'}  # omni, diff, acker
-    shape: {name: 'rectangle', length: 4.6, width: 1.6, wheelbase: 3}
+    shape: {name: 'rectangle', length: 4.4, width: 2.0, wheelbase: 3}
     state: [5, 5, 0, 0]
     goal: [40, 40, 0]
     vel_max: [4, 1]
@@ -28,7 +28,7 @@ robot:
         std: 1   
         angle_std: 0.2
         offset: [0, 0, 0]
-        alpha: 0.4
+        alpha: 0.1
 
 obstacle:
   - number: 1

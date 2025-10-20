@@ -4,31 +4,14 @@ world:
   step_time: 0.1  # 10Hz calculate each step
   sample_time: 0.1  # 10 Hz for render and data extraction 
   offset: [0, 0] # the offset of the world on x and y 
-  collision_mode: 'stop'  # 'stop', 'unobstructed',  
-  control_mode: 'auto'  # 'keyboard', 'auto'
+  collision_mode: 'unobstructed'  # 'stop', 'unobstructed',  
+  control_mode: 'keyboard'  # 'keyboard', 'auto'
 
 robot:
   - kinematics: {name: 'acker'}  # omni, diff, acker
-    shape: {name: 'rectangle', length: 4.3, width: 2.0, wheelbase: 3}
+    shape: {name: 'rectangle', length: 4.4, width: 2.0, wheelbase: 3}
     state: [5, 5, 0, 0]
-    goal: [40, 40, 0]
-    vel_max: [4, 1]
-    behavior: {name: 'dash'} # move toward to the goal directly
-    plot:
-      show_trail: True
-      traj_color: 'g'
-
-    sensors: 
-      - type: 'lidar2d'
-        range_min: 0
-        range_max: 20
-        angle_range: 3.14
-        number: 100
-        noise: False
-        std: 1   
-        angle_std: 0.2
-        offset: [0, 0, 0]
-        alpha: 0.4
+    vel_max: [4, 0.7]
 
 obstacle:
   - number: 1
@@ -44,5 +27,5 @@ obstacle:
 gui:
   keyboard:
     key_lv_max: 3.0
-    key_ang_max: 1.0
+    key_ang_max: 0.7
     backend: 'mpl'

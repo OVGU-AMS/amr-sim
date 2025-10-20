@@ -12,6 +12,7 @@ import shutil
 from collections.abc import Iterable
 from math import cos, sin
 from typing import Any, Optional
+import math
 
 import imageio.v3 as imageio
 import matplotlib.pyplot as plt
@@ -62,6 +63,8 @@ class EnvPlot:
             "dpi": 100,
             "bbox_inches": "tight",
         }
+        self.robot_pos = (0,0)
+        self.estimation_pos = (0,0)
 
         self.saved_figure_kwargs.update(world.plot_parse.get("saved_figure", {}))
         figure_pixels = world.plot_parse.get("figure_pixels", [1000, 800])
@@ -82,6 +85,8 @@ class EnvPlot:
         self.dyna_line_list: list[Any] = []
         self.dyna_point_list: list[Any] = []
         self.dyna_quiver_list: list[Any] = []
+
+        self.state_text = self.ax.text(1.01, 0.65, f"Robot Position: \nX: {self.robot_pos[0]:.3f}\nY: {self.robot_pos[1]:.3f}\n\nEstimated Position:\nX: {self.estimation_pos[0]:.3f}\nY: {self.estimation_pos[1]:.3f}\n\nEstimation Error:\nX: {abs(self.robot_pos[0] - self.estimation_pos[0]):.3f}\nY: {abs(self.robot_pos[1] - self.estimation_pos[1]):.3f}\nTotal: {math.sqrt(math.pow(self.robot_pos[0] - self.estimation_pos[0],2)+ math.pow(self.robot_pos[1] - self.estimation_pos[1],2)):.3f}", fontsize=14, transform=self.ax.transAxes)
 
         # Initialize the plot with world data
         self._init_plot(world, objects, **kwargs)
@@ -422,6 +427,7 @@ class EnvPlot:
                 f"Simulation Time: {self.world.time:.2f}s, Status: {self.world.status}",
                 pad=3,
             )
+        self.state_text.set_text(f"Robot Position: \nX: {self.robot_pos[0]:.3f}\nY: {self.robot_pos[1]:.3f}\n\nEstimated Position:\nX: {self.estimation_pos[0]:.3f}\nY: {self.estimation_pos[1]:.3f}\n\nEstimation Error:\nX: {abs(self.robot_pos[0] - self.estimation_pos[0]):.3f}\nY: {abs(self.robot_pos[1] - self.estimation_pos[1]):.3f}\nTotal: {math.sqrt(math.pow(self.robot_pos[0] - self.estimation_pos[0],2)+ math.pow(self.robot_pos[1] - self.estimation_pos[1],2)):.3f}")
 
     def save_figure(
         self,

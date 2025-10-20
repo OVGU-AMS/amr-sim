@@ -5,27 +5,27 @@ world:
   sample_time: 0.1  # 10 Hz for render and data extraction 
   offset: [0, 0] # the offset of the world on x and y 
   collision_mode: 'stop'  # 'stop', 'unobstructed', 'unobstructed_obstacles'
-  control_mode: 'auto'  # 'keyboard', 'auto'
+  control_mode: 'keyboard'  # 'keyboard', 'auto'
 
 robot:
-  - kinematics: {name: 'diff'}  # omni, diff, acker
+  - kinematics: {name: 'omni'}  # omni, diff, acker
     shape: {name: 'circle', radius: 0.2}  # radius
     # shape: {name: 'rectangle', length: 0.5, width: 0.2}  # radius
     state: [1, 1, 0]  
     goal: [9, 9, 0] 
     # acce: [3, .inf]   # acce of [linear, angular]  or [v_x, v_y] or [linear, steer]
-    behavior: {name: 'dash'} # move toward to the goal directly 
+   # behavior: {name: 'dash'} # move toward to the goal directly 
 
     sensors:
       - name: 'lidar2d'
         range_min: 0
-        range_max: 5
-        angle_range: 3.14 #  4.7123
-        number: 200
+        range_max: 10
+        angle_range: 6.28 #  4.7123
+        number: 4
         noise: False
         std: 0.2
         angle_std: 0.2
-        offset: [0.1, 0.1, 0.5]
+        offset: [0.1, 0.1, 0]
         alpha: 0.3
       
 obstacle:

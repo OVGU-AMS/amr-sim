@@ -8,7 +8,7 @@ class RobotAcker(ObjectBase):
         self,
         color: str = "y",
         state_dim: int = 4,
-        description: str = "car_green.png",
+        description: str = "OVGUcar.png",
         **kwargs: Any,
     ) -> None:
         """Create an Ackermann-steered robot.
