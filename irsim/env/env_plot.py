@@ -17,6 +17,8 @@ import math
 import imageio.v3 as imageio
 import matplotlib.pyplot as plt
 import matplotlib.transforms as mtransforms
+from matplotlib.offsetbox import AnchoredText
+from matplotlib.offsetbox import VPacker, TextArea, AnnotationBbox
 import mpl_toolkits.mplot3d.art3d as art3d
 import numpy as np
 from matplotlib.lines import Line2D
@@ -65,6 +67,7 @@ class EnvPlot:
         }
         self.robot_pos = (0,0)
         self.estimation_pos = (0,0)
+        self.lidar_lines = []
 
         self.saved_figure_kwargs.update(world.plot_parse.get("saved_figure", {}))
         figure_pixels = world.plot_parse.get("figure_pixels", [1000, 800])
@@ -86,7 +89,12 @@ class EnvPlot:
         self.dyna_point_list: list[Any] = []
         self.dyna_quiver_list: list[Any] = []
 
-        self.state_text = self.ax.text(1.01, 0.65, f"Robot Position: \nX: {self.robot_pos[0]:.3f}\nY: {self.robot_pos[1]:.3f}\n\nEstimated Position:\nX: {self.estimation_pos[0]:.3f}\nY: {self.estimation_pos[1]:.3f}\n\nEstimation Error:\nX: {abs(self.robot_pos[0] - self.estimation_pos[0]):.3f}\nY: {abs(self.robot_pos[1] - self.estimation_pos[1]):.3f}\nTotal: {math.sqrt(math.pow(self.robot_pos[0] - self.estimation_pos[0],2)+ math.pow(self.robot_pos[1] - self.estimation_pos[1],2)):.3f}", fontsize=14, transform=self.ax.transAxes)
+        self.box_position = TextArea(
+            f"Robot Position: \nX: {self.robot_pos[0]:.3f}\nY: {self.robot_pos[1]:.3f}\n\nEstimated Position:\nX: {self.estimation_pos[0]:.3f}\nY: {self.estimation_pos[1]:.3f}\n\nEstimation Error:\nX: {abs(self.robot_pos[0] - self.estimation_pos[0]):.3f}\nY: {abs(self.robot_pos[1] - self.estimation_pos[1]):.3f}\nTotal: {math.sqrt(math.pow(self.robot_pos[0] - self.estimation_pos[0],2)+ math.pow(self.robot_pos[1] - self.estimation_pos[1],2)):.3f}", 
+            textprops=dict(size=12)
+        )
+
+        #self.state_text = self.fig.text(1.01, 0.65, f"Robot Position: \nX: {self.robot_pos[0]:.3f}\nY: {self.robot_pos[1]:.3f}\n\nEstimated Position:\nX: {self.estimation_pos[0]:.3f}\nY: {self.estimation_pos[1]:.3f}\n\nEstimation Error:\nX: {abs(self.robot_pos[0] - self.estimation_pos[0]):.3f}\nY: {abs(self.robot_pos[1] - self.estimation_pos[1]):.3f}\nTotal: {math.sqrt(math.pow(self.robot_pos[0] - self.estimation_pos[0],2)+ math.pow(self.robot_pos[1] - self.estimation_pos[1],2)):.3f}", fontsize=14, ha='left', va='center')
 
         # Initialize the plot with world data
         self._init_plot(world, objects, **kwargs)
@@ -99,6 +107,28 @@ class EnvPlot:
         #     "target": "pink",
         # }
         # self.color_map.update(kwargs.get("color_map", {}))
+    
+    def init_lidar_lines(self, count):
+        self.lidar_lines = [TextArea("LiDAR measurements:", textprops=dict(size=12, color="black", va='top', ha='left'))]
+        for l in range(count):
+            self.lidar_lines.append(TextArea("x:0 y:0", textprops=dict(size=12, color="black", va='top', ha='left')))
+    
+    def init_side_box(self):
+        boxes = []
+        boxes.append(self.box_position)
+        if len(self.lidar_lines) > 0:
+            boxes.append(VPacker(children=self.lidar_lines, align='left', pad=0, sep=1))
+
+        vbox = VPacker(children=boxes, align="left", pad=0, sep=15)
+        # Attach to axes
+        ab = AnnotationBbox(vbox, (1.02, 0.95), xycoords='axes fraction',
+                    box_alignment=(0, 1), frameon=False)
+        self.ax.add_artist(ab)
+
+    def modify_lidar_line(self,text, color, i):
+        if len(self.lidar_lines) > i:
+            self.lidar_lines[i].set_text(text)
+            self.lidar_lines[i]._text.set_color(color)
 
     def _init_plot(
         self,
@@ -135,6 +165,14 @@ class EnvPlot:
 
         self.ax.set_xlabel("x [m]")
         self.ax.set_ylabel("y [m]")
+        
+        bg_path = os.path.join(pm.root_path, "world", "description", "AMS.png")
+        img = plt.imread(bg_path)
+
+        scale = 0.5
+        width = (world.x_range[1] - world.x_range[0]) - ((world.x_range[1] - world.x_range[0]) * scale)
+        height = (world.y_range[1] - world.y_range[0]) - (((world.x_range[1] - world.x_range[0]) * scale / img.shape[1]) * img.shape[0] )
+        self.ax.imshow(img,extent=[world.x_range[0] + width / 2, world.x_range[1] - width / 2, world.y_range[0] + height / 2, world.y_range[1] - height / 2], alpha=0.2, aspect=1)
 
         self.init_objects_plot(objects)
         self.draw_grid_map(world.grid_map)
@@ -427,7 +465,7 @@ class EnvPlot:
                 f"Simulation Time: {self.world.time:.2f}s, Status: {self.world.status}",
                 pad=3,
             )
-        self.state_text.set_text(f"Robot Position: \nX: {self.robot_pos[0]:.3f}\nY: {self.robot_pos[1]:.3f}\n\nEstimated Position:\nX: {self.estimation_pos[0]:.3f}\nY: {self.estimation_pos[1]:.3f}\n\nEstimation Error:\nX: {abs(self.robot_pos[0] - self.estimation_pos[0]):.3f}\nY: {abs(self.robot_pos[1] - self.estimation_pos[1]):.3f}\nTotal: {math.sqrt(math.pow(self.robot_pos[0] - self.estimation_pos[0],2)+ math.pow(self.robot_pos[1] - self.estimation_pos[1],2)):.3f}")
+        self.box_position.set_text(f"Robot Position: \nX: {self.robot_pos[0]:.3f}\nY: {self.robot_pos[1]:.3f}\n\nEstimated Position:\nX: {self.estimation_pos[0]:.3f}\nY: {self.estimation_pos[1]:.3f}\n\nEstimation Error:\nX: {abs(self.robot_pos[0] - self.estimation_pos[0]):.3f}\nY: {abs(self.robot_pos[1] - self.estimation_pos[1]):.3f}\nTotal: {math.sqrt(math.pow(self.robot_pos[0] - self.estimation_pos[0],2)+ math.pow(self.robot_pos[1] - self.estimation_pos[1],2)):.3f}")
 
     def save_figure(
         self,

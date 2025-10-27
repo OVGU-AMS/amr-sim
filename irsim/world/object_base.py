@@ -54,6 +54,7 @@ class ObjectInfo:
     cone_type: str
     convex_flag: bool
     name: str
+    current_velocity: np.ndarray
 
     def add_property(self, key, value):
         setattr(self, key, value)
@@ -329,6 +330,7 @@ class ObjectBase:
             self.cone_type,
             self.convex_flag,
             self.name,
+            0
         )
 
         self.obstacle_info = None
@@ -444,7 +446,7 @@ class ObjectBase:
         self._state = next_state
         self._velocity = behavior_vel
         self._geometry = self.gf.step(self.state)
-
+        
         if sensor_step:
             self.sensor_step()
 
@@ -1937,6 +1939,7 @@ class ObjectBase:
         Returns:
             ObjectInfo: Information about the object.
         """
+        self.info.current_velocity = self._velocity
         return self.info
 
     def get_obstacle_info(self) -> ObstacleInfo:

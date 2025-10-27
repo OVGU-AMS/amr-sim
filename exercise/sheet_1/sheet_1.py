@@ -31,26 +31,6 @@ def transform_to(x: np.ndarray, t: np.ndarray, a: float):
     
     return x_transformed
 
-def transform_wheel_to_global(robot_pose: np.ndarray, wheel_pose: np.ndarray):
-    '''Transforms the position of the wheel to the global coordinate frame
-
-    Args:
-        robot_pose (np.ndarray): Pose of the robot as vector with `(x,y,a)^T` where `x, y` are the position 
-            and `a` the heading in the global coordinate frame.
-        wheel_pose (np.ndarray): Pose of the wheel relative to the robots center with `(x,y,a)^T` 
-            where `x, y` are the position and `a` the heading.
-        
-    Returns:
-        np.ndarray: The wheels pose in the global coordinate frame.
-
-    '''
-    
-    #TODO 2a: Use the transform_to function to transform the wheel_pose to the global coordinate frame using the robots position and heading
-    
-    wheel_global = wheel_pose
-
-    return wheel_global
-
 def transform_measurement_to_global(robot_pose: np.ndarray, lidar_pose: np.ndarray, measurements: List[np.ndarray]):
     '''Transforms a LiDAR measurement to the global coordinate frame
 
@@ -68,7 +48,7 @@ def transform_measurement_to_global(robot_pose: np.ndarray, lidar_pose: np.ndarr
             `(x,y)^T` with the locations of the measurements.
     '''
     
-    # TODO 2b: Transform the measurements to the global coordinate frame by using a two step approach and the transform_to function.
+    # TODO 2a: Transform the measurements to the global coordinate frame by using a two step approach and the transform_to function.
     #          First convert the measurement to the robots coordinate frame using the angle of the ray and the pose of the sensor.
     #          Then transform this to the global frame by using the robots pose.
     
@@ -87,21 +67,54 @@ def transform_velocity_to_global(robot_pose: np.ndarray, velocity: np.ndarray):
         np.ndarray: Velocity for the robot in the global frame with `(x,y)^T`.
     '''
     
-    # TODO 2c: Transform the relative velocity of the robot to the velocity in the global reference frame.
+    # TODO 2b: Transform the relative velocity of the robot to the velocity in the global reference frame.
     #          Use the robots orientation and the implemented transform_to function.
     
     velocity_global = velocity
 
     return velocity_global
 
+
+
 # ---- Not relevant for you ----
 
+
+
 env = irsim.make("sheet_1.yaml", save_ani=False, full=False)
+
+lines = [[1/25, 0, 'blue'],
+         [25, 0, 'red'],
+         [-1/25, 50, 'green'],
+         [25,- 25*48, 'purple']
+]
+
+env._env_plot.init_lidar_lines(4)
+env._env_plot.init_side_box()
 
 for _i in range(1000):
     env.step()
     env.render(0.05)
     env._env_plot.robot_pos = (env.get_robot_state()[0][0], env.get_robot_state()[1][0])
+    lidar_measurements = [np.array([r,0,env.get_lidar_scan()['angle_min'] + env.get_lidar_scan()['angle_increment'] * i]) for i,r in enumerate(env.get_lidar_scan()['ranges'])]
+    robot_velocity = env.get_robot_info().current_velocity.flatten()
+    robot_velocity[1] = 0
+    robot_position = env.get_robot_state().flatten()[:-1]
+    lidar_pose = np.array([2,0,0])
+
+    transformed_lidar = transform_measurement_to_global(robot_position, lidar_pose, lidar_measurements)
+
+    for i, measurement in enumerate(transformed_lidar):
+        color = 'black'
+        for line in lines:
+            if abs(measurement[1] - (line[0] * measurement[0] + line[1])) <= 0.0001:
+                color = line[2]
+
+        env._env_plot.modify_lidar_line(f"x: {measurement[0]:.2f} y: {measurement[1]:.2f}", color, i + 1)
+
+    #print(lidar_measurements)
+    #print(robot_velocity)
+    #print(robot_position)
+
     if env.done():
         break
 
