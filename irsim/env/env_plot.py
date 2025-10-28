@@ -68,6 +68,7 @@ class EnvPlot:
         self.robot_pos = (0,0)
         self.estimation_pos = (0,0)
         self.lidar_lines = []
+        self.robot_vel = (0,0)
 
         self.saved_figure_kwargs.update(world.plot_parse.get("saved_figure", {}))
         figure_pixels = world.plot_parse.get("figure_pixels", [1000, 800])
@@ -91,6 +92,11 @@ class EnvPlot:
 
         self.box_position = TextArea(
             f"Robot Position: \nX: {self.robot_pos[0]:.3f}\nY: {self.robot_pos[1]:.3f}\n\nEstimated Position:\nX: {self.estimation_pos[0]:.3f}\nY: {self.estimation_pos[1]:.3f}\n\nEstimation Error:\nX: {abs(self.robot_pos[0] - self.estimation_pos[0]):.3f}\nY: {abs(self.robot_pos[1] - self.estimation_pos[1]):.3f}\nTotal: {math.sqrt(math.pow(self.robot_pos[0] - self.estimation_pos[0],2)+ math.pow(self.robot_pos[1] - self.estimation_pos[1],2)):.3f}", 
+            textprops=dict(size=12)
+        )
+
+        self.box_velocity = TextArea(
+            f"Robot Velocity: \nx: {self.robot_vel[0]:.3f}\ny: {self.robot_vel[1]:.3f}", 
             textprops=dict(size=12)
         )
 
@@ -118,7 +124,7 @@ class EnvPlot:
         boxes.append(self.box_position)
         if len(self.lidar_lines) > 0:
             boxes.append(VPacker(children=self.lidar_lines, align='left', pad=0, sep=1))
-
+        boxes.append(self.box_velocity)
         vbox = VPacker(children=boxes, align="left", pad=0, sep=15)
         # Attach to axes
         ab = AnnotationBbox(vbox, (1.02, 0.95), xycoords='axes fraction',
@@ -466,6 +472,7 @@ class EnvPlot:
                 pad=3,
             )
         self.box_position.set_text(f"Robot Position: \nX: {self.robot_pos[0]:.3f}\nY: {self.robot_pos[1]:.3f}\n\nEstimated Position:\nX: {self.estimation_pos[0]:.3f}\nY: {self.estimation_pos[1]:.3f}\n\nEstimation Error:\nX: {abs(self.robot_pos[0] - self.estimation_pos[0]):.3f}\nY: {abs(self.robot_pos[1] - self.estimation_pos[1]):.3f}\nTotal: {math.sqrt(math.pow(self.robot_pos[0] - self.estimation_pos[0],2)+ math.pow(self.robot_pos[1] - self.estimation_pos[1],2)):.3f}")
+        self.box_velocity.set_text(f"Robot Velocity: \nx: {self.robot_vel[0]:.3f}\ny: {self.robot_vel[1]:.3f}")
 
     def save_figure(
         self,

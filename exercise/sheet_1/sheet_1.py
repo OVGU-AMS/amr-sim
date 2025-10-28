@@ -109,8 +109,10 @@ for _i in range(1000):
             if abs(measurement[1] - (line[0] * measurement[0] + line[1])) <= 0.0001:
                 color = line[2]
 
-        env._env_plot.modify_lidar_line(f"x: {measurement[0]:.2f} y: {measurement[1]:.2f}", color, i + 1)
+        env._env_plot.modify_lidar_line(f"x: {measurement[0]:.3f} y: {measurement[1]:.3f}", color, i + 1)
 
+    transformed_vel = transform_velocity_to_global(robot_position, robot_velocity)
+    env._env_plot.robot_vel = transformed_vel
     #print(lidar_measurements)
     #print(robot_velocity)
     #print(robot_position)
