@@ -169,8 +169,8 @@ class EnvPlot:
         self.ax.set_xlim(world.x_range)
         self.ax.set_ylim(world.y_range)
 
-        self.ax.set_xlabel("x [m]")
-        self.ax.set_ylabel("y [m]")
+        self.ax.set_xlabel("x in m")
+        self.ax.set_ylabel("y in m")
         
         bg_path = os.path.join(pm.root_path, "world", "description", "AMS.png")
         img = plt.imread(bg_path)
