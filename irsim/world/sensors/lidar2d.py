@@ -1,4 +1,4 @@
-from math import cos, pi, sin
+from math import cos, pi, sin, sqrt, pow
 from typing import Optional
 
 import matplotlib.transforms as mtransforms
@@ -169,7 +169,7 @@ class Lidar2D:
         prepare(new_geometry)
 
         new_geometry, intersect_indices = self.laser_geometry_process(new_geometry)
-
+        
         if len(intersect_indices) == 0:
             self._geometry = new_geometry
             self.calculate_range()
@@ -201,40 +201,53 @@ class Lidar2D:
             return lidar_geometry, []
 
         potential_geometries_index = object_tree.query(lidar_geometry)
-
         geometries_to_subtract = []
         intersect_indices = []
 
-        for geom_index in potential_geometries_index:
-            geo = geometries[geom_index]
-            obj = objects[geom_index]
+        for geom in lidar_geometry.geoms:
+            ray_geoms = []
+            for geom_index in potential_geometries_index:
+                geo = geometries[geom_index]
+                obj = objects[geom_index]
 
-            if (
-                obj._id == self.obj_id
-                or not is_valid(obj._geometry)
-                or obj.unobstructed
-            ):
-                continue
+                if (
+                    obj._id == self.obj_id
+                    or not is_valid(obj._geometry)
+                    or obj.unobstructed
+                ):
+                    continue
 
-            if obj.shape == "map":
-                potential_intersections = obj.geometry_tree.query(lidar_geometry)
-                filtered_lines = [obj.linestrings[i] for i in potential_intersections]
-                filtered_multi_lines = MultiLineString(filtered_lines)
-                # prepare(filtered_multi_lines)
+                if obj.shape == "map":
+                    potential_intersections = obj.geometry_tree.query(geom)
+                    filtered_lines = [obj.linestrings[i] for i in potential_intersections]
+                    filtered_multi_lines = MultiLineString(filtered_lines)
+                    # prepare(filtered_multi_lines)
 
-                if lidar_geometry.intersects(filtered_multi_lines):
-                    geometries_to_subtract.append(filtered_multi_lines)
-                    intersect_indices.append(geom_index)
+                    if geom.intersects(filtered_multi_lines):
+                        geometries_to_subtract.append(filtered_multi_lines)
+                        intersect_indices.append(geom_index)
 
-            else:
-                if lidar_geometry.intersects(geo):
-                    geometries_to_subtract.append(geo)
-                    intersect_indices.append(geom_index)
+                else:
+                    if geom.intersects(geo):
+                        ray_geoms.append((geo, geom_index))
+                        #geometries_to_subtract.append(geo)
+                        #intersect_indices.append(geom_index)
+            smallest_d = 10000
+            smallest_i = 0
+            for inx,r in enumerate(ray_geoms):
+                diff_v = geom.difference(r[0]).geoms[0]
+                diff = sqrt(pow(diff_v.coords[0][0] - diff_v.coords[1][0],2)+ pow(diff_v.coords[0][1] - diff_v.coords[1][1],2))
+                if diff < smallest_d:
+                    smallest_d = diff
+                    smallest_i = inx
+            if len(ray_geoms) > smallest_i:
+                geometries_to_subtract.append(ray_geoms[smallest_i][0])
+                intersect_indices.append(ray_geoms[smallest_i][1])
 
         if geometries_to_subtract:
             merged_geometry = unary_union(geometries_to_subtract)
             lidar_geometry = lidar_geometry.difference(merged_geometry)
-
+        self.hit_geoms = geometries_to_subtract
         return lidar_geometry, intersect_indices
 
     def calculate_range(self):
@@ -288,6 +301,8 @@ class Lidar2D:
         scan_data["ranges"] = self.range_data
         scan_data["intensities"] = None
         scan_data["velocity"] = self.velocity
+        scan_data["coords_hit"] = self.hit_geoms
+        scan_data["coords_rays"] = self._geometry 
 
         return scan_data
 
