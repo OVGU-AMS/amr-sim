@@ -57,7 +57,7 @@ def position_from_block_lsq(normals, wall_dists, deltas, lidar_ranges, lidar_pos
         normals (np.ndarray): Normal vectors of the hit walls.
         wall_dists (np.ndarray): Distances of the hit walls to the coordinate origin. 
             Together with `normals` they describe the walls as lines using the hessian form.
-        deltas (np.ndarray): Angle of TODO decide lidar or lidar to normal
+        deltas (np.ndarray): Angle between LiDAR ray and normal vector of the wall.
         lidar_ranges (np.ndarray): Measured ranges of the LiDAR rays.
         lidar_pos (np.ndarray): Position of the LiDAR sensor in the robot coordinate frame.
         heading (float): Heading of the robot.
